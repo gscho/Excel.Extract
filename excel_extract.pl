@@ -1,88 +1,60 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use Spreadsheet::Read;
+use Spreadsheet::WriteExcel;
 
-use Spreadsheet::ParseExcel;
-use Spreadsheet::ParseExcel::SaveParser;
+#The code below is for opening the excel file and for creating a new seperated excel file 
+#The names of the files will be given by the user via the terminal at runtime
 
-use Path::Class;
-use autodie;# die if problem reading or writing a file
+my $excelFile = "CountryCodes.xls";
+my $newExcelFile = "UKCustomers.xls";
+my $book = ReadData  ($excelFile);
+my $parser = Spreadsheet::ParseExcel->new();
+my $newBook = Spreadsheet::WriteExcel->new($newExcelFile);
+my $newSheet = $newBook->add_worksheet();
+my $format = $newBook->add_format();
+$format->set_bold();
 
-my @testResult;
-my @data;
-my $linecount = 0;
-my $file = file("file.txt");
 
-# Read in the entire contents of a file
-my $content = $file->slurp();
+ 
+#Setting up the new excel sheet that will be created. These are the new column titles.
+$newSheet->write(0,0,'BSBACCTID',$format);
+$newSheet->write(0,1,'COMPANYNAME',$format);
+$newSheet->write(0,2,'ADDRESS',$format);
+$newSheet->write(0,3,'LOCALE',$format);
+$newSheet->write(0,4,'EMAIL',$format);
 
-# openr() returns an IO::File object to read from
-my $file_handle = $file->openr();
 
-# Read in line at a time
-while( my $line = $file_handle->getline() ) {
-        if (index($line, '***') != -1){	
-                @testResult = split(' ',  $line);
-                $data[$linecount] = "$testResult[1]";
-                $linecount++;
-                print "$linecount\n";
-        }
-       
-       
+my $row = 2;
+my $col = 4;
+my $newrow = 1;
+my $newcol = 0;
+my $countrycode = "gb";
+#Loops through all the rows and columns in the excel file
+while ($row <= 16698){
+
+my $cell4 = $book->[1]{cell}[$col][$row];
+my $cell1 = $book->[1]{cell}[$col-3][$row];
+my $cell2 = $book->[1]{cell}[$col-2][$row];
+my $cell3 = $book->[1]{cell}[$col-1][$row];
+my $cell5 = $book->[1]{cell}[$col+1][$row];
+
+#The code below starts searching for the country code given by the user
+if (index($cell4, $countrycode) != -1){
+	my @values4 = split(',', $cell4);
+	if(index($values4[3], "gb") != -1){
+		
+		$newSheet->write($newrow,$newcol,"$cell1",$format);
+		$newSheet->write($newrow,$newcol+1,"$cell2",$format);
+		$newSheet->write($newrow,$newcol+2,"$cell3",$format);
+		$newSheet->write($newrow,$newcol+3,"$cell4",$format);
+		$newSheet->write($newrow,$newcol+4,"$cell5",$format);
+		#print "$cell1 $cell2 $cell3 $cell4 $cell5\n";
+		$newrow++;
+		
+		
+	}
 }
-        foreach (@data){
-       print "$_\n";
+	$row++;
 }
-
-#################Writing to excel section###################
-
-my $row = 0;
-my $col = 0;
-
-
-my $parser   = new Spreadsheet::ParseExcel::SaveParser;
-my $modify = $parser->Parse('test.xls');
-
-    
-
-    # Get the format from the cell
-    #my $format   = $template->{Worksheet}[$sheet]
-                            #->{Cells}[$row][$col]
-                            #->{FormatNo};
-
-    # Write data to some cells
-   # $template->AddCell(0, $row,   $col,   1,     $format);
-    #$template->AddCell(0, $row+1, $col, "Hello", $format);
-
-    # Add a new worksheet
-    #$template->AddWorksheet('New Data');
-
-    # The SaveParser SaveAs() method returns a reference to a
-    # Spreadsheet::WriteExcel object. If you wish you can then
-    # use this to access any of the methods that aren't
-    # available from the SaveParser object. If you don't need
-    # to do this just use SaveAs().
-    #
-    my $workbook;
-
-    {
-        # SaveAs generates a lot of harmless warnings about unset
-        # Worksheet properties. You can ignore them if you wish.
-        local $^W = 0;
-
-        # Rewrite the file or save as a new file
-        $workbook = $modify->SaveAs('test.xls');
-    }
-
-    # Use Spreadsheet::WriteExcel methods
-    my $worksheet  = $workbook->sheets(0);
-    my $parser2 = Spreadsheet::ParseExcel->new();
-    my $isEmpty = $parser2->parse('test.xls');
-    if($isEmpty->get_cell(1,1) eq "")
-    {
-          
-        print "Hello Workld\n";
-    }
-    $worksheet->write($row+2, $col, "World8");
-
-    $workbook->close();
