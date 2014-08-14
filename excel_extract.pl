@@ -4,11 +4,31 @@ use warnings;
 use Spreadsheet::Read;
 use Spreadsheet::WriteExcel;
 
-#The code below is for opening the excel file and for creating a new seperated excel file 
-#The names of the files will be given by the user via the terminal at runtime
+my $excelFile;
+my $newExcelFile;
+my $countrycode;
+my $maxrow;
 
-my $excelFile = "CountryCodes.xls";
-my $newExcelFile = "UKCustomers.xls";
+#This code takes input from the user to find the file to modify, the name for the new file, and the country code to sort by.
+print "Please provide the path and name of the excel file to be sorted:\n";
+chomp($excelFile = <>);
+
+print "Input the two letter country code(uk, us, ca, fr, etc.):\n";
+chomp($countrycode = <>);
+$countrycode = lc($countrycode); #Makes sure the country code is lower case.
+
+print "How many rows are in your Excel document?:\n";
+chomp($maxrow = <>);
+
+print "Name the new Excel file that will be created:\n";
+chomp($newExcelFile = <>);
+print "PROCESSING...";
+
+
+#The code below is for opening the excel file and for creating a new separated excel file 
+#The names of the files have been given by the user via the terminal at runtime
+
+
 my $book = ReadData  ($excelFile);
 my $parser = Spreadsheet::ParseExcel->new();
 my $newBook = Spreadsheet::WriteExcel->new($newExcelFile);
@@ -30,9 +50,9 @@ my $row = 2;
 my $col = 4;
 my $newrow = 1;
 my $newcol = 0;
-my $countrycode = "gb";
-#Loops through all the rows and columns in the excel file
-while ($row <= 16698){
+
+#Iterates through all the rows and columns in the excel file
+while ($row <= $maxrow){
 
 my $cell4 = $book->[1]{cell}[$col][$row];
 my $cell1 = $book->[1]{cell}[$col-3][$row];
@@ -50,7 +70,7 @@ if (index($cell4, $countrycode) != -1){
 		$newSheet->write($newrow,$newcol+2,"$cell3",$format);
 		$newSheet->write($newrow,$newcol+3,"$cell4",$format);
 		$newSheet->write($newrow,$newcol+4,"$cell5",$format);
-		#print "$cell1 $cell2 $cell3 $cell4 $cell5\n";
+		
 		$newrow++;
 		
 		
